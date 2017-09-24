@@ -2,8 +2,7 @@ package = "tinyserv"
 version = "dev-1"
 
 source = {
-  -- url = "git://github.com/rokf/tinyserv.git"
-  url = "..."
+  url = "git://github.com/rokf/tinyserv.git"
 }
 
 description = {
@@ -20,6 +19,7 @@ dependencies = {
 
 build = {
   type = "builtin",
+  modules = {},
   install = {
     bin = { "tinyserv" }
   }

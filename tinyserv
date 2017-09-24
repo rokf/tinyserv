@@ -4,6 +4,7 @@ local server = require 'http.server'
 local headers = require 'http.headers'
 local version = require 'http.version'
 local util = require 'http.util'
+local cqueues = require 'cqueues'
 
 local port = arg[1] and tonumber(arg[1]) or 8000
 
@@ -34,45 +35,52 @@ local gen_ct = function (path)
   end
 end
 
-local instance = server.listen({
-  host = "127.0.0.1",
-  port = port,
-  onstream = function (_,st)
-    local request_headers = st:get_headers()
-    local method = request_headers:get(":method")
-    local path = request_headers:get(":path")
+local cq = cqueues.new()
 
-    local response_headers = headers.new()
-    response_headers:append(":status", nil)
-    response_headers:append("server", string.format("%s/%s",version.name, version.version))
-    response_headers:append("date", util.imf_date())
+cq:wrap(function ()
+  local instance = server.listen({
+    host = "127.0.0.1",
+    port = port,
+    onstream = function (_,st)
+      local request_headers = st:get_headers()
+      local method = request_headers:get(":method")
+      local path = request_headers:get(":path")
 
-    if method ~= "GET" and method ~= "HEAD" then
-      response_headers:upsert(":status", "405")
-      st:write_headers(response_headers, true)
-      return
-    else
-      local filename = "index.html"
-      if path ~= "/" then
-        filename = string.sub(path,2,-1)
-      end
-      print('serving',filename)
-      local file = io.open(filename, 'rb')
+      local response_headers = headers.new()
+      response_headers:append(":status", nil)
+      response_headers:append("server", string.format("%s/%s",version.name, version.version))
+      response_headers:append("date", util.imf_date())
 
-      if file ~= nil then
-        response_headers:upsert(":status", "200")
-        response_headers:append("content-type", gen_ct(filename))
-        st:write_headers(response_headers, false)
-        st:write_body_from_file(file)
-        file:close()
+      if method ~= "GET" and method ~= "HEAD" then
+        response_headers:upsert(":status", "405")
+        st:write_headers(response_headers, true)
+        return
       else
-        response_headers:upsert(":status", "404")
-        response_headers:append("content-type", "text/html; charset=utf-8")
-        st:write_headers(response_headers, false)
-        st:write_body_from_string(string.format("<p>[<b>404</b>] File '%s' does not exist!</p>",filename))
+        local filename = "index.html"
+        if path ~= "/" then
+          filename = string.sub(path,2,-1)
+        end
+        print('serving',filename)
+        local file = io.open(filename, 'rb')
+
+        if file ~= nil then
+          response_headers:upsert(":status", "200")
+          response_headers:append("content-type", gen_ct(filename))
+          st:write_headers(response_headers, false)
+          st:write_body_from_file(file)
+          file:close()
+        else
+          response_headers:upsert(":status", "404")
+          response_headers:append("content-type", "text/html; charset=utf-8")
+          st:write_headers(response_headers, false)
+          st:write_body_from_string(string.format("<p>[<b>404</b>] File '%s' does not exist!</p>",filename))
+        end
       end
     end
-  end
-})
+  })
 
-instance:loop()
+  instance:loop()
+end)
+
+cq:loop()
+
