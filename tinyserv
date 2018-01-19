@@ -4,7 +4,9 @@ local server = require 'http.server'
 local headers = require 'http.headers'
 local version = require 'http.version'
 local util = require 'http.util'
+
 local cqueues = require 'cqueues'
+local signal = require 'cqueues.signal'
 
 local port = arg[1] and tonumber(arg[1]) or 8000
 
@@ -36,6 +38,22 @@ local gen_ct = function (path)
 end
 
 local cq = cqueues.new()
+
+local sl = signal.listen(signal.SIGINT)
+signal.block(signal.SIGINT)
+
+cq:wrap(function ()
+  local signo
+
+  while true do
+    signo = sl:wait(0.5)
+
+    if signo == signal.SIGINT then
+      print('\nINTERRUPTED!')
+      os.exit(true)
+    end
+  end
+end)
 
 cq:wrap(function ()
   local instance = server.listen({
