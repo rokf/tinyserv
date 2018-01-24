@@ -12,29 +12,79 @@ local port = arg[1] and tonumber(arg[1]) or 8000
 
 print('Starting on port', port)
 
--- generate content type
+local lt = {
+  [".3g2"] = "video/3gpp2",
+  [".3gp"] = "video/3gpp",
+  [".7z"] = "application/x-7z-compressed",
+  [".aac"] = "audio/aac",
+  [".abw"] = "application/x-abiword",
+  [".arc"] = "application/octet-stream",
+  [".avi"] = "video/x-msvideo",
+  [".azw"] = "application/vnd.amazon.ebook",
+  [".bin"] = "application/octet-stream",
+  [".bz"] = "application/x-bzip",
+  [".bz2"] = "application/x-bzip2",
+  [".csh"] = "application/x-csh",
+  [".css"] = "text/css",
+  [".csv"] = "text/csv",
+  [".doc"] = "application/msword",
+  [".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  [".eot"] = "application/vnd.ms-fontobject",
+  [".epub"] = "application/epub+zip",
+  [".gif"] = "image/gif",
+  [".htm"] = "text/html",
+  [".html"] = "text/html",
+  [".ico"] = "image/x-icon",
+  [".ics"] = "text/calendar",
+  [".jar"] = "application/java-archive",
+  [".jpeg"] = "image/jpeg",
+  [".jpg"] = "image/jpeg",
+  [".js"] = "application/javascript",
+  [".json"] = "application/json",
+  [".mid"] = "audio/midi",
+  [".midi"] = "audio/midi",
+  [".mpeg"] = "video/mpeg",
+  [".mpkg"] = "application/vnd.apple.installer+xml",
+  [".odp"] = "application/vnd.oasis.opendocument.presentation",
+  [".ods"] = "application/vnd.oasis.opendocument.spreadsheet",
+  [".odt"] = "application/vnd.oasis.opendocument.text",
+  [".oga"] = "audio/ogg",
+  [".ogv"] = "video/ogg",
+  [".ogx"] = "application/ogg",
+  [".otf"] = "font/otf",
+  [".pdf"] = "application/pdf",
+  [".png"] = "image/png",
+  [".ppt"] = "application/vnd.ms-powerpoint",
+  [".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  [".rar"] = "application/x-rar-compressed",
+  [".rtf"] = "application/rtf",
+  [".sh"] = "application/x-sh",
+  [".svg"] = "image/svg+xml",
+  [".swf"] = "application/x-shockwave-flash",
+  [".tar"] = "application/x-tar",
+  [".tif"] = "image/tiff",
+  [".tiff"] = "image/tiff",
+  [".ts"] = "application/typescript",
+  [".ttf"] = "font/ttf",
+  [".vsd"] = "application/vnd.visio",
+  [".wav"] = "audio/x-wav",
+  [".weba"] = "audio/webm",
+  [".webm"] = "video/webm",
+  [".webp"] = "image/webp",
+  [".woff"] = "font/woff",
+  [".woff2"] = "font/woff2",
+  [".xhtml"] = "application/xhtml+xml",
+  [".xls"] = "application/vnd.ms-excel",
+  [".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  [".xml"] = "application/xml",
+  [".xul"] = "application/vnd.mozilla.xul+xml",
+  [".zip"] = "application/zip"
+}
+
 local gen_ct = function (path)
-  if string.match(path, "%.png$") then
-    return "image/png"
-  elseif string.match(path, "%.jpeg$") then
-    return "image/jpeg"
-  elseif string.match(path, "%.gif$") then
-    return "image/gif"
-  elseif string.match(path, "%.svg$") then
-    return "image/svg+xml"
-  elseif string.match(path, "%.css$") then
-    return "text/css"
-  elseif string.match(path, "%.[x]?htm[l]?$") then
-    return "text/html; charset=utf-8"
-  elseif string.match(path, "%.wav$") then
-    return "audio/wave"
-  elseif string.match(path, "%.webm$") then
-    return "video/webm"
-  elseif string.match(path, "%.ogg$") then
-    return "audio/ogg"
-  else
-    return "text/plain"
-  end
+  local s = string.match(path,"(%.%a+)$")
+  if s == nil or lt[s] == nil then return 'text/plain' end
+  return lt[s]
 end
 
 local cq = cqueues.new()
